@@ -1,0 +1,38 @@
+
+
+.selection table {
+	 border-collapse: collapse;
+}
+
+.selection table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.selection table th, .selection table td {
+    text-align: left;
+    padding: 4px;
+}
+.selection table tr:nth-child(even) {background-color: #f2f2f2;}
+
+#desc {
+	float: left;
+	margin-bottom: 1em;
+	position: relative;
+	white-space:nowrap;
+	font-size:1em;
+}
+
+.selection {
+	min-width: 200px;
+	padding: 4px;
+	border-radius: 4px;
+	box-shadow: 0 1px 5px rgba(0,0,0,0.65);
+	clear: both;
+	background: #fefefe;
+	white-space: nowrap;
+	margin-bottom:-15px!important;
+	top: 30rem;
+    left: 9rem;
+}
+

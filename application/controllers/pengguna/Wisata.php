@@ -1,0 +1,166 @@
+<?php
+if (!defined('BASEPATH')) exit('No direct script access allowed');
+class Wisata extends CI_Controller
+{
+	
+	public function index()
+	{
+		$keyword = $this->input->get('q');
+		$keywordl = $this->input->get('l');
+		$this->load->library('pagination');
+		
+		if ($keyword <> '' || $keywordl) {
+			$config['base_url'] = base_url() . 'pengguna/wisata?q=' . urlencode($keyword) . '&l=' . urlencode($keywordl);
+			$config['first_url'] = base_url() . 'pengguna/wisata?q=' . urlencode($keyword) . '&l=' . urlencode($keywordl);
+		} else {
+			$config['base_url'] = base_url() . 'pengguna/wisata';
+			$config['first_url'] = base_url() . 'pengguna/wisata';
+			$keyword = "";
+			$keywordl = "";
+		}
+		
+		
+		$config['page_query_string'] = TRUE;
+		$config['total_rows'] = $this->rental_model->get_datawisata2('wisata', $keyword, $keywordl);
+		$config['per_page'] = 6;
+		$config['first_link']       = 'First';
+		$config['last_link']        = 'Last';
+		$config['next_link']        = '<span class="lnr lnr-chevron-right"></span>';
+		$config['prev_link']        = '<span class="lnr lnr-chevron-left"></span>';
+		$config['full_tag_open']    = '<nav class="blog-pagination justify-content-center d-flex"><ul class="pagination">';
+		$config['full_tag_close']   = '</ul></nav>';
+		$config['num_tag_open']     = '<li class="page-item"><div class="page-link">';
+		$config['num_tag_close']    = '</div></li>';
+		$config['cur_tag_open']     = '<li class="page-item active"><div class="page-link">';
+		$config['cur_tag_close']    = '<div class="sr-only"></div></div></li>';
+		$config['next_tag_open']    = '<li class="page-item"><div class="page-link">';
+		$config['next_tagl_close']  = '<div aria-hidden="true">&raquo;</div></div></li>';
+		$config['prev_tag_open']    = '<li class="page-item"> <span class="page-link" aria-hidden="true">';
+		$config['prev_tagl_close']  = '<span class="lnr lnr-chevron-left"></span></span></li>';
+		$config['first_tag_open']   = '<li class="page-item"><span class="page-link">';
+		$config['first_tagl_close'] = '</span></li>';
+		$config['last_tag_open']    = '<li class="page-item"> <span class="page-link" aria-hidden="true">';
+		$config['last_tagl_close']  = '<span class="lnr lnr-chevron-right"></span></span></li>';
+		$this->pagination->initialize($config);
+		$limit = $config['per_page'];
+		$offset = html_escape($this->input->get('per_page'));
+		$data['wisata'] = $this->rental_model->get_published_wisata2($limit, $offset, $keyword, $keywordl);
+		$data['kategori'] = $this->rental_model->get_alldata('kategori', '1');
+
+		$this->load->view('templates_pengguna/header');
+		$this->load->view('pengguna/wisata', $data);
+		$this->load->view('templates_pengguna/footer');
+	}
+	public function detail_wisata($id)
+	{
+
+		$jenis="wisata";
+		if ($this->session->userdata('login_status') != TRUE) {
+			$data['detail'] = $this->rental_model->ambil_id_wisata($id);
+			$data['transport'] = $this->rental_model->ambil_id_transportasi($id);
+			$data['gambar'] = $this->rental_model->ambil_gambar($id,$jenis);
+			$data['ratings'] = $this->rental_model->ambil_rating($id, $jenis);
+			
+			$data['totrating'] = $this->rental_model->ambil_ratings($id, $jenis);
+			// $data['komentar'] = $this->rental_model->ambil_id_komentar($id);
+			// $data['totlike'] = $this->rental_model->ambil_id_like($id);
+		} else {
+			$idu = $this->session->userdata('id_user');
+			$data['detail'] = $this->rental_model->ambil_id_wisata($id);
+			$data['transport'] = $this->rental_model->ambil_id_transportasi($id);
+			$data['gambar'] = $this->rental_model->ambil_gambar($id,$jenis);
+			$data['komentar'] = $this->rental_model->ambil_id_komentar($id);
+			
+			$data['ratings'] = $this->rental_model->ambil_rating($id, $jenis);
+			
+			$data['totrating'] = $this->rental_model->ambil_ratings($id, $jenis);
+			// $data['totlike'] = $this->rental_model->ambil_id_like($id);
+			// $data['like'] = $this->rental_model->ambil_id_likeuser($id, $idu);
+		}
+
+		$this->load->view('templates_pengguna/header');
+		$this->load->view('pengguna/detail_wisata', $data);
+		$this->load->view('templates_pengguna/footer');
+	}
+	public function search()
+	{
+		$this->load->library('pagination');
+		$config['base_url'] = site_url('pengguna/wisata');
+		$config['page_query_string'] = TRUE;
+		$config['total_rows'] = $this->rental_model->get_data('wisata');
+		$config['per_page'] = 3;
+		$config['full_tag_open'] = '<div class="pagination">';
+		$config['full_tag_close'] = '</div>';
+		$this->pagination->initialize($config);
+		$limit = $config['per_page'];
+		$offset = html_escape($this->input->get('per_page'));
+		$data['wisata'] = $this->rental_model->get_published_wisata($limit, $offset);
+
+		$keyword = $this->input->post('keyword');
+		$data['wisata'] = $this->rental_model->get_keyword_wisata($keyword);
+		$this->load->view('templates_pengguna/header');
+		$this->load->view('pengguna/wisata', $data);
+		$this->load->view('templates_pengguna/footer');
+	}
+
+	public function komentar()
+	{
+
+		$idw = $this->input->post('idwisata', TRUE);
+		$data = array(
+			'id_user' => $this->input->post('iduser', TRUE),
+			'id_komentar_wisata' => $this->input->post('idwisata', TRUE),
+			'komentar' => $this->input->post('kome', TRUE),
+		);
+
+		$this->rental_model->insert_data($data, "komentar");
+		$this->session->set_flashdata('success', 'Data successfully saved');
+		redirect(site_url('pengguna/wisata/detail_wisata/' . $idw));
+	}
+	public function rating()
+	{
+
+		$idw = $this->input->post('jenisid', TRUE);
+		$data = array(
+			'iduser' => $this->input->post('iduser', TRUE),
+			'jenisid' => $this->input->post('jenisid', TRUE),
+			'jenis' => $this->input->post('jenis', TRUE),
+			'ratings' => $this->input->post('ratings', TRUE),
+			'note' => $this->input->post('note', TRUE),
+		);
+
+		$this->rental_model->insert_data($data, "rating");
+		$this->session->set_flashdata('success', 'Data successfully saved');
+		redirect(site_url('pengguna/wisata/detail_wisata/' . $idw));
+	}
+
+	public function addlike()
+	{
+
+		$idw = $this->input->post('idwisata', TRUE);
+		$data = array(
+			'id_user' => $this->input->post('iduser', TRUE),
+			'id_like_wisata' => $this->input->post('idwisata', TRUE),
+			'jumlah_like' => 1,
+		);
+
+		$this->rental_model->insert_data($data, "like_user");
+		$this->session->set_flashdata('success', 'Data successfully saved');
+		redirect(site_url('pengguna/wisata/detail_wisata/' . $idw));
+	}
+
+	public function removelike()
+	{
+
+		$idw = $this->input->post('idwisata', TRUE);
+		$idu = $this->input->post('iduser', TRUE);
+		$idwi = array('id_user' => $idu);
+		$where = array('id_like_wisata' => $idw);
+		$this->rental_model->delete_like($idwi, $where, 'like_user');
+
+		$this->session->set_flashdata('success', 'Data successfully saved');
+		redirect(site_url('pengguna/wisata/detail_wisata/' . $idw));
+	}
+
+	
+}
